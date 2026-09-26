@@ -146,9 +146,13 @@
         let watchId = null;
         let isTracking = false;
         let currentRoute = '';
+        
+        // Automated Logic Flags
         let hasTriggeredGeofence = false;
+        let hasTriggeredArrival = false;
+        let hasTriggeredTraffic = false;
+        let trafficTicks = 0; // Duration counter for simulated traffic
 
-        // Presentation Start Points (SLEX)
         const demoStartLocations = {
             'calamba': { lat: 14.1925, lng: 121.1332 }, 
             'sta-rosa': { lat: 14.2847, lng: 121.0963 },
@@ -157,7 +161,6 @@
             'carmona': { lat: 14.3060, lng: 121.0366 }   
         };
 
-        // Real Terminal Destination Coordinates
         const terminalDestinations = {
             'calamba': { lat: 14.2046, lng: 121.1553 }, 
             'sta-rosa': { lat: 14.2939, lng: 121.1036 },
@@ -166,7 +169,6 @@
             'carmona': { lat: 14.3148, lng: 121.0543 }
         };
 
-        // Haversine Formula (Calculates distance between two GPS coordinates in kilometers)
         function calculateDistance(lat1, lon1, lat2, lon2) {
             const R = 6371; 
             const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -219,13 +221,11 @@
                     const latLng = [data.lat, data.lng];
                     const target = terminalDestinations[currentRoute];
                     
-                    // Render destination marker
                     if (!terminalMarker) {
                         const destIcon = L.divIcon({ html: '<div style="background:var(--mcl-red); width:15px; height:15px; border-radius:0; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5);"></div>', className: '' });
                         terminalMarker = L.marker([target.lat, target.lng], {icon: destIcon}).addTo(map);
                     }
 
-                    // Render moving shuttle
                     if (!shuttleMarker) {
                         const institutionalIcon = L.divIcon({ html: '<div style="background:var(--mcl-navy); width:20px; height:20px; border-radius:50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>', className: '' });
                         shuttleMarker = L.marker(latLng, {icon: institutionalIcon}).addTo(map);
@@ -239,7 +239,8 @@
                     const banner = document.getElementById('announcement-banner');
                     banner.innerText = `Network Alert: ${msg}`;
                     banner.style.display = 'block';
-                    setTimeout(() => { banner.style.display = 'none'; }, 10000);
+                    // Changed duration from 10 seconds (10000) to 25 seconds (25000)
+                    setTimeout(() => { banner.style.display = 'none'; }, 25000); 
                 });
             }
             setTimeout(() => { map.invalidateSize(); }, 100);
@@ -256,35 +257,64 @@
             let simulatedLat = startLoc.lat;
             let simulatedLng = startLoc.lng;
 
-            // Calculate small movement steps for the presentation simulator
             const stepLat = (targetLoc.lat - startLoc.lat) / 40; 
             const stepLng = (targetLoc.lng - startLoc.lng) / 40;
 
             if (!isTracking) {
-                hasTriggeredGeofence = false; // Reset the geofence flag on new trip
+                // Reset flags on new trip
+                hasTriggeredGeofence = false; 
+                hasTriggeredArrival = false;
+                hasTriggeredTraffic = false;
+                trafficTicks = 0;
                 
                 watchId = setInterval(() => {
-                    // Move the simulated driver closer to the terminal
-                    simulatedLat += stepLat;
-                    simulatedLng += stepLng;
+                    // Traffic & Speed Sensing Logic
+                    if (trafficTicks > 0) {
+                        // "Traffic mode": Reduce speed to 20% of normal
+                        simulatedLat += stepLat * 0.2;
+                        simulatedLng += stepLng * 0.2;
+                        trafficTicks--;
+                    } else {
+                        // Normal driving speed
+                        simulatedLat += stepLat;
+                        simulatedLng += stepLng;
+                        
+                        // 6% chance the GPS suddenly detects a drastic speed drop
+                        if (Math.random() < 0.06 && !hasTriggeredTraffic) {
+                            trafficTicks = 6; // Simulator stays in traffic for ~12 seconds
+                            hasTriggeredTraffic = true;
+                            socket.emit('sendAnnouncement', { route: currentRoute, msg: "⚠️ Automated System Alert: Average speed dropped. Traffic congestion detected." });
+                            showSentConfirmation("Auto-Traffic Alert");
+                        }
+                    }
                     
                     socket.emit('driverLocation', { route: currentRoute, lat: simulatedLat, lng: simulatedLng });
                     
-                    // Geofencing Check
                     const distanceToTerminal = calculateDistance(simulatedLat, simulatedLng, targetLoc.lat, targetLoc.lng);
                     
                     status.innerText = `[Live Broadcast Active]`;
                     metrics.innerText = `Distance to Pickup: ${distanceToTerminal.toFixed(2)} km`;
 
-                    // Automatic 5km Proximity Alert
+                    // 1. Proximity Geofence Alert (5km)
                     if (distanceToTerminal <= 5.0 && !hasTriggeredGeofence) {
                         socket.emit('sendAnnouncement', { route: currentRoute, msg: "📍 Automated System Alert: Shuttle is within 5km of the pickup point." });
-                        hasTriggeredGeofence = true; // Lock flag to prevent sending this every 2 seconds
-                        showSentConfirmation("Auto-Alert Triggered");
+                        hasTriggeredGeofence = true; 
+                        showSentConfirmation("Auto-Proximity Alert");
                     }
 
-                    // Stop simulator if it reaches the destination
-                    if (distanceToTerminal < 0.2) clearInterval(watchId);
+                    // 2. Terminal Arrival Alert (0.2km / 200m)
+                    if (distanceToTerminal <= 0.2 && !hasTriggeredArrival) {
+                        socket.emit('sendAnnouncement', { route: currentRoute, msg: "✅ Automated System Alert: Shuttle has arrived at the terminal." });
+                        hasTriggeredArrival = true;
+                        showSentConfirmation("Auto-Arrival Alert");
+                        
+                        // End tracking loop automatically upon arrival
+                        clearInterval(watchId);
+                        isTracking = false;
+                        btn.innerText = "Start GPS Broadcasting";
+                        btn.style.background = "var(--mcl-red)";
+                        status.innerText = "Status: Arrived";
+                    }
 
                 }, 2000);
                 
