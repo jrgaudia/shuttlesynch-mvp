@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapúa MCL | ShuttleSync</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        :root {
+            --mcl-navy: #002752;
+            --mcl-red: #E51937;
+            --mcl-blue: #00509E;
+            --mcl-gray: #A7A9AC;
+            --bg-light: #F8F9FA;
+            --panel-bg: #FFFFFF;
+            --text-dark: #333333;
+            --text-muted: #6C757D;
+            --border-light: #DEE2E6;
+        }
+
+        body { margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-light); color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; }
+        header { padding: 20px; background: var(--panel-bg); text-align: center; border-bottom: 8px solid; border-image: linear-gradient(to right, var(--mcl-navy) 25%, var(--mcl-red) 25%, var(--mcl-red) 50%, var(--mcl-gray) 50%, var(--mcl-gray) 75%, var(--mcl-blue) 75%) 1; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--mcl-navy); letter-spacing: 0.5px; }
+        header p { margin: 5px 0 0 0; font-size: 0.85rem; color: var(--mcl-red); font-weight: 600; }
+
+        .panel-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; gap: 15px; padding: 20px; }
+        .auth-card { background: var(--panel-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-light); width: 100%; max-width: 420px; text-align: left; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .auth-card.center-text { text-align: center; }
+
+        label { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 8px; }
+        input[type="text"], select { width: calc(100% - 24px); padding: 12px; margin-bottom: 20px; background: var(--panel-bg); border: 1px solid var(--border-light); color: var(--text-dark); border-radius: 6px; font-family: inherit; font-size: 1rem; transition: border-color 0.2s; }
+        input[type="text"]:focus, select:focus { outline: none; border-color: var(--mcl-navy); box-shadow: 0 0 0 3px rgba(0, 39, 82, 0.1); }
+
+        .primary-btn { padding: 12px 20px; font-size: 1rem; background: var(--mcl-red); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
+        .primary-btn:hover { background: #c4132e; }
+        .primary-btn.full-width { width: 100%; margin-bottom: 10px; }
+
+        .secondary-btn { padding: 12px 20px; font-size: 1rem; background: var(--panel-bg); color: var(--text-dark); border: 1px solid var(--border-light); border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .secondary-btn:hover { background: var(--bg-light); border-color: var(--mcl-gray); }
+        .secondary-btn.full-width { width: 100%; }
+
+        .back-btn { background: var(--panel-bg); color: var(--text-dark); border: 1px solid var(--border-light); padding: 8px 15px; cursor: pointer; border-radius: 6px; margin: 10px; align-self: flex-start; font-size: 0.9rem; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
+        #commuter-view, #driver-view { display: none; flex-direction: column; flex-grow: 1; }
+        #announcement-banner { background: var(--mcl-red); color: white; text-align: center; padding: 12px; font-weight: bold; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 1000; position: relative;}
+        .active-route-label { background: var(--panel-bg); color: var(--mcl-navy); text-align: center; padding: 10px; font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border-light); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        #map { flex-grow: 1; width: 100%; z-index: 1; }
+
+        .driver-card { background: var(--panel-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 25px; width: calc(100% - 40px); max-width: 420px; text-align: center; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .quick-alerts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .quick-alert-btn { background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-light); padding: 12px 5px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;}
+        .quick-alert-btn:hover { border-color: var(--mcl-navy); background: #f0f4f8; }
+        .capacity-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
+
+        h4 { margin: 15px 0 10px 0; font-weight: 700; color: var(--mcl-navy); }
+        hr { border: 0; border-top: 1px solid var(--border-light); margin: 25px 0; }
+        #status { font-size: 0.9rem; color: var(--mcl-navy); margin-top: 12px; font-weight: 700;}
+        #distance-metrics { font-size: 0.85rem; color: var(--text-muted); margin-top: 5px; font-weight: 600; }
+        #alert-status { color: #28a745; font-size: 0.9rem; font-weight: 600; min-height: 20px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2>MAPÚA MCL SHUTTLESYNC</h2>
+        <p>NaviSync Technologies</p>
+    </header>
+
+    <div id="login-screen" class="panel-container">
+        <div class="auth-card center-text">
+            <h3 style="margin-top: 0; color: var(--mcl-red); font-size: 1.5rem;">Institutional Access</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 25px;">Authenticate with your institutional ID to access live campus routes.</p>
+            <label style="text-align: left;">Student / Employee Number</label>
+            <input type="text" id="studentId" placeholder="e.g., 2023150505">
+            <button class="primary-btn full-width" onclick="proceedToRoleSelection()" style="margin-top: 10px;">Access ShuttleSync</button>
+        </div>
+    </div>
+
+    <div id="role-selection" class="panel-container" style="display: none;">
+        <div class="auth-card center-text">
+            <h3 style="margin-top: 0; color: var(--mcl-navy);">System Configuration</h3>
+            <label style="text-align: left; margin-top: 20px;">Select Terminal Route</label>
+            <select id="routeSelect">
+                <option value="" disabled selected>Choose a route...</option>
+                <option value="calamba">Calamba Terminal</option>
+                <option value="sta-rosa">Sta. Rosa Terminal</option>
+                <option value="binan">Biñan Terminal</option>
+                <option value="san-pedro">San Pedro Terminal</option>
+                <option value="carmona">Carmona Terminal</option>
+            </select>
+            <hr>
+            <button class="primary-btn full-width" onclick="initializeRole('commuter')">Access Commuter Map</button>
+            <button class="secondary-btn full-width" onclick="initializeRole('driver')">Open Driver Console</button>
+        </div>
+    </div>
+
+    <div id="commuter-view">
+        <button class="back-btn" onclick="goBack()">← Back to Menu</button>
+        <div class="active-route-label" id="commuter-route-display"></div>
+        <div id="announcement-banner"></div>
+        <div id="map"></div>
+    </div>
+
+    <div id="driver-view">
+        <button class="back-btn" onclick="goBack()" style="margin: 15px auto 0 auto;">← Back to Menu</button>
+        <div class="driver-card">
+            <h3 id="driver-route-display" style="margin-top:0; color: var(--mcl-navy);"></h3>
+            
+            <button id="toggleBtn" class="primary-btn full-width" style="padding: 16px; font-size: 1.1rem;" onclick="toggleTracking()">Start GPS Broadcasting</button>
+            <p id="status">Status: Offline</p>
+            <p id="distance-metrics"></p>
+            
+            <hr>
+            
+            <h4>Passenger Capacity</h4>
+            <div class="capacity-grid">
+                <button class="quick-alert-btn" style="border-bottom: 4px solid #28a745;" onclick="sendQuickAlert('🟢 Seats Available')">Available</button>
+                <button class="quick-alert-btn" style="border-bottom: 4px solid #ffc107;" onclick="sendQuickAlert('🟡 Almost Full')">Filling</button>
+                <button class="quick-alert-btn" style="border-bottom: 4px solid #E51937;" onclick="sendQuickAlert('🔴 Shuttle Full')">Full</button>
+            </div>
+
+            <h4>Quick Route Alerts</h4>
+            <div class="quick-alerts-grid">
+                <button class="quick-alert-btn" onclick="sendQuickAlert('📍 Approaching terminal.')">Near Pickup</button>
+                <button class="quick-alert-btn" onclick="sendQuickAlert('⏱️ Arrived at terminal.')">Arrived</button>
+                <button class="quick-alert-btn" onclick="sendQuickAlert('⏳ Departing in 5 mins.')">Leaving Soon</button>
+                <button class="quick-alert-btn" onclick="sendQuickAlert('⚠️ Heavy traffic delay.')">Traffic Delay</button>
+            </div>
+            
+            <hr>
+
+            <label style="text-align: left;">Manual Override</label>
+            <input type="text" id="announcementText" placeholder="Custom operational alert...">
+            <button class="secondary-btn full-width" onclick="sendAnnouncement()">Push Custom Alert</button>
+            <p id="alert-status"></p>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let map;
+        let shuttleMarker = null;
+        let terminalMarker = null;
+        let watchId = null;
+        let isTracking = false;
+        let currentRoute = '';
+        let hasTriggeredGeofence = false;
+
+        // Presentation Start Points (SLEX)
+        const demoStartLocations = {
+            'calamba': { lat: 14.1925, lng: 121.1332 }, 
+            'sta-rosa': { lat: 14.2847, lng: 121.0963 },
+            'binan': { lat: 14.3223, lng: 121.0805 },    
+            'san-pedro': { lat: 14.3615, lng: 121.0489 },
+            'carmona': { lat: 14.3060, lng: 121.0366 }   
+        };
+
+        // Real Terminal Destination Coordinates
+        const terminalDestinations = {
+            'calamba': { lat: 14.2046, lng: 121.1553 }, 
+            'sta-rosa': { lat: 14.2939, lng: 121.1036 },
+            'binan': { lat: 14.3313, lng: 121.0801 },    
+            'san-pedro': { lat: 14.3562, lng: 121.0427 },
+            'carmona': { lat: 14.3148, lng: 121.0543 }
+        };
+
+        // Haversine Formula (Calculates distance between two GPS coordinates in kilometers)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; 
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        function proceedToRoleSelection() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('role-selection').style.display = 'flex';
+        }
+
+        function initializeRole(role) {
+            const dropdown = document.getElementById('routeSelect');
+            if(!dropdown.value) { alert("Please select a route first."); return; }
+            
+            currentRoute = dropdown.value;
+            const routeName = dropdown.options[dropdown.selectedIndex].text;
+
+            socket.emit('joinRoute', currentRoute);
+            document.getElementById('role-selection').style.display = 'none';
+            
+            if (role === 'commuter') {
+                document.getElementById('commuter-view').style.display = 'flex';
+                document.getElementById('commuter-route-display').innerText = `Viewing: ${routeName}`;
+                initMap();
+            } else if (role === 'driver') {
+                document.getElementById('driver-view').style.display = 'flex';
+                document.getElementById('driver-route-display').innerText = `${routeName} Console`;
+            }
+        }
+
+        function goBack() {
+            document.getElementById('commuter-view').style.display = 'none';
+            document.getElementById('driver-view').style.display = 'none';
+            document.getElementById('role-selection').style.display = 'flex';
+            if (isTracking) toggleTracking();
+        }
+
+        function initMap() {
+            if (!map) {
+                const center = demoStartLocations[currentRoute];
+                map = L.map('map').setView([center.lat, center.lng], 13);
+                
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+
+                socket.on('updateMap', (data) => {
+                    const latLng = [data.lat, data.lng];
+                    const target = terminalDestinations[currentRoute];
+                    
+                    // Render destination marker
+                    if (!terminalMarker) {
+                        const destIcon = L.divIcon({ html: '<div style="background:var(--mcl-red); width:15px; height:15px; border-radius:0; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.5);"></div>', className: '' });
+                        terminalMarker = L.marker([target.lat, target.lng], {icon: destIcon}).addTo(map);
+                    }
+
+                    // Render moving shuttle
+                    if (!shuttleMarker) {
+                        const institutionalIcon = L.divIcon({ html: '<div style="background:var(--mcl-navy); width:20px; height:20px; border-radius:50%; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.3);"></div>', className: '' });
+                        shuttleMarker = L.marker(latLng, {icon: institutionalIcon}).addTo(map);
+                    } else {
+                        shuttleMarker.setLatLng(latLng);
+                    }
+                    map.panTo(latLng, {animate: true, duration: 1});
+                });
+
+                socket.on('newAnnouncement', (msg) => {
+                    const banner = document.getElementById('announcement-banner');
+                    banner.innerText = `Network Alert: ${msg}`;
+                    banner.style.display = 'block';
+                    setTimeout(() => { banner.style.display = 'none'; }, 10000);
+                });
+            }
+            setTimeout(() => { map.invalidateSize(); }, 100);
+        }
+
+        function toggleTracking() {
+            const btn = document.getElementById('toggleBtn');
+            const status = document.getElementById('status');
+            const metrics = document.getElementById('distance-metrics');
+            
+            const startLoc = demoStartLocations[currentRoute];
+            const targetLoc = terminalDestinations[currentRoute];
+            
+            let simulatedLat = startLoc.lat;
+            let simulatedLng = startLoc.lng;
+
+            // Calculate small movement steps for the presentation simulator
+            const stepLat = (targetLoc.lat - startLoc.lat) / 40; 
+            const stepLng = (targetLoc.lng - startLoc.lng) / 40;
+
+            if (!isTracking) {
+                hasTriggeredGeofence = false; // Reset the geofence flag on new trip
+                
+                watchId = setInterval(() => {
+                    // Move the simulated driver closer to the terminal
+                    simulatedLat += stepLat;
+                    simulatedLng += stepLng;
+                    
+                    socket.emit('driverLocation', { route: currentRoute, lat: simulatedLat, lng: simulatedLng });
+                    
+                    // Geofencing Check
+                    const distanceToTerminal = calculateDistance(simulatedLat, simulatedLng, targetLoc.lat, targetLoc.lng);
+                    
+                    status.innerText = `[Live Broadcast Active]`;
+                    metrics.innerText = `Distance to Pickup: ${distanceToTerminal.toFixed(2)} km`;
+
+                    // Automatic 5km Proximity Alert
+                    if (distanceToTerminal <= 5.0 && !hasTriggeredGeofence) {
+                        socket.emit('sendAnnouncement', { route: currentRoute, msg: "📍 Automated System Alert: Shuttle is within 5km of the pickup point." });
+                        hasTriggeredGeofence = true; // Lock flag to prevent sending this every 2 seconds
+                        showSentConfirmation("Auto-Alert Triggered");
+                    }
+
+                    // Stop simulator if it reaches the destination
+                    if (distanceToTerminal < 0.2) clearInterval(watchId);
+
+                }, 2000);
+                
+                isTracking = true;
+                btn.innerText = "Stop Broadcasting";
+                btn.style.background = "var(--mcl-navy)";
+            } else {
+                clearInterval(watchId);
+                isTracking = false;
+                btn.innerText = "Start GPS Broadcasting";
+                btn.style.background = "var(--mcl-red)";
+                status.innerText = "Status: Offline";
+                metrics.innerText = "";
+            }
+        }
+
+        function sendAnnouncement() {
+            const msg = document.getElementById('announcementText').value;
+            if(msg) {
+                socket.emit('sendAnnouncement', { route: currentRoute, msg: msg });
+                document.getElementById('announcementText').value = '';
+                showSentConfirmation("✓ Alert Broadcasted");
+            }
+        }
+
+        function sendQuickAlert(presetMsg) {
+            socket.emit('sendAnnouncement', { route: currentRoute, msg: presetMsg });
+            showSentConfirmation("✓ Alert Broadcasted");
+        }
+
+        function showSentConfirmation(text) {
+            const alertStatus = document.getElementById('alert-status');
+            alertStatus.innerText = text;
+            setTimeout(() => { alertStatus.innerText = ""; }, 3000);
+        }
+    </script>
+</body>
+</html>
