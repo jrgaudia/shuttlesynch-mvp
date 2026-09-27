@@ -8,25 +8,44 @@ const io = socketIo(server);
 
 app.use(express.static('public'));
 
+// In-memory passenger queue for each route
+const waitingPassengers = {
+    'calamba': 0, 'sta-rosa': 0, 'binan': 0, 'san-pedro': 0, 'carmona': 0
+};
+
 io.on('connection', (socket) => {
     console.log('A user connected:', socket.id);
 
-    // Assign the user (commuter or driver) to a specific route room
     socket.on('joinRoute', (route) => {
-        // Leave any previous rooms to prevent overlap if they switch routes
         socket.rooms.forEach(room => {
             if (room !== socket.id) socket.leave(room);
         });
         socket.join(route);
-        console.log(`Socket ${socket.id} joined route: ${route}`);
+        // Push the current passenger count to the user as soon as they join
+        socket.emit('updatePassengerCount', waitingPassengers[route] || 0);
     });
 
-    // Receive GPS from a driver and broadcast ONLY to that specific route room
+    // Handle commuter check-in
+    socket.on('commuterWaiting', (route) => {
+        if (waitingPassengers[route] !== undefined) {
+            waitingPassengers[route]++;
+            // Broadcast the new count to everyone on this route (Driver & Commuters)
+            io.to(route).emit('updatePassengerCount', waitingPassengers[route]);
+        }
+    });
+
+    // Reset the passenger queue when the driver arrives
+    socket.on('driverArrived', (route) => {
+        if (waitingPassengers[route] !== undefined) {
+            waitingPassengers[route] = 0;
+            io.to(route).emit('updatePassengerCount', waitingPassengers[route]);
+        }
+    });
+
     socket.on('driverLocation', (data) => {
         socket.to(data.route).emit('updateMap', data);
     });
 
-    // Route-specific announcements
     socket.on('sendAnnouncement', (data) => {
         io.to(data.route).emit('newAnnouncement', data.msg);
     });
