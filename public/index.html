@@ -34,6 +34,7 @@
         .primary-btn { padding: 12px 20px; font-size: 1rem; background: var(--mcl-red); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
         .primary-btn:hover { background: #c4132e; }
         .primary-btn.full-width { width: 100%; margin-bottom: 10px; }
+        .primary-btn:disabled { background: var(--mcl-gray); cursor: not-allowed; }
 
         .secondary-btn { padding: 12px 20px; font-size: 1rem; background: var(--panel-bg); color: var(--text-dark); border: 1px solid var(--border-light); border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
         .secondary-btn:hover { background: var(--bg-light); border-color: var(--mcl-gray); }
@@ -44,9 +45,14 @@
         #commuter-view, #driver-view { display: none; flex-direction: column; flex-grow: 1; }
         #announcement-banner { background: var(--mcl-red); color: white; text-align: center; padding: 12px; font-weight: bold; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 1000; position: relative;}
         .active-route-label { background: var(--panel-bg); color: var(--mcl-navy); text-align: center; padding: 10px; font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border-light); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .check-in-bar { padding: 10px; text-align: center; background: var(--bg-light); border-bottom: 1px solid var(--border-light); }
         #map { flex-grow: 1; width: 100%; z-index: 1; }
 
         .driver-card { background: var(--panel-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 25px; width: calc(100% - 40px); max-width: 420px; text-align: center; margin: 20px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .queue-display { background: var(--bg-light); padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light); }
+        .queue-display h2 { margin: 0; color: var(--mcl-red); font-size: 2.5rem; }
+        .queue-display p { margin: 5px 0 0 0; font-size: 0.9rem; color: var(--text-muted); font-weight: 600; }
+        
         .quick-alerts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
         .quick-alert-btn { background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-light); padding: 12px 5px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;}
         .quick-alert-btn:hover { border-color: var(--mcl-navy); background: #f0f4f8; }
@@ -97,6 +103,12 @@
     <div id="commuter-view">
         <button class="back-btn" onclick="goBack()">← Back to Menu</button>
         <div class="active-route-label" id="commuter-route-display"></div>
+        
+        <!-- COMMUTER CHECK-IN -->
+        <div class="check-in-bar">
+            <button id="checkInBtn" class="primary-btn" style="margin: 0; width: auto;" onclick="checkInTerminal()">📍 I'm Waiting at Terminal</button>
+        </div>
+        
         <div id="announcement-banner"></div>
         <div id="map"></div>
     </div>
@@ -105,6 +117,12 @@
         <button class="back-btn" onclick="goBack()" style="margin: 15px auto 0 auto;">← Back to Menu</button>
         <div class="driver-card">
             <h3 id="driver-route-display" style="margin-top:0; color: var(--mcl-navy);"></h3>
+            
+            <!-- LIVE PASSENGER QUEUE -->
+            <div class="queue-display">
+                <h2 id="passenger-count">0</h2>
+                <p>Passengers Waiting at Terminal</p>
+            </div>
             
             <button id="toggleBtn" class="primary-btn full-width" style="padding: 16px; font-size: 1.1rem;" onclick="toggleTracking()">Start GPS Broadcasting</button>
             <p id="status">Status: Offline</p>
@@ -124,7 +142,7 @@
                 <button class="quick-alert-btn" onclick="sendQuickAlert('📍 Approaching terminal.')">Near Pickup</button>
                 <button class="quick-alert-btn" onclick="sendQuickAlert('⏱️ Arrived at terminal.')">Arrived</button>
                 <button class="quick-alert-btn" onclick="sendQuickAlert('⏳ Departing in 5 mins.')">Leaving Soon</button>
-                <button class="quick-alert-btn" onclick="sendQuickAlert('⚠️ Heavy traffic delay.')">Traffic Delay</button>
+                <button class="quick-alert-btn" onclick="sendQuickAlert('⚠️ Delayed: Arriving late.')">Arriving Late</button>
             </div>
             
             <hr>
@@ -147,11 +165,10 @@
         let isTracking = false;
         let currentRoute = '';
         
-        // Automated Logic Flags
         let hasTriggeredGeofence = false;
         let hasTriggeredArrival = false;
         let hasTriggeredTraffic = false;
-        let trafficTicks = 0; // Duration counter for simulated traffic
+        let trafficTicks = 0;
 
         const demoStartLocations = {
             'calamba': { lat: 14.1925, lng: 121.1332 }, 
@@ -190,6 +207,11 @@
             currentRoute = dropdown.value;
             const routeName = dropdown.options[dropdown.selectedIndex].text;
 
+            // Reset check-in button visually if switching routes
+            const checkInBtn = document.getElementById('checkInBtn');
+            checkInBtn.disabled = false;
+            checkInBtn.innerText = "📍 I'm Waiting at Terminal";
+
             socket.emit('joinRoute', currentRoute);
             document.getElementById('role-selection').style.display = 'none';
             
@@ -210,6 +232,20 @@
             if (isTracking) toggleTracking();
         }
 
+        // --- PASSENGER QUEUE LOGIC ---
+        function checkInTerminal() {
+            socket.emit('commuterWaiting', currentRoute);
+            const btn = document.getElementById('checkInBtn');
+            btn.disabled = true;
+            btn.innerText = "✓ Checked into Terminal Queue";
+        }
+
+        socket.on('updatePassengerCount', (count) => {
+            const display = document.getElementById('passenger-count');
+            if (display) display.innerText = count;
+        });
+
+        // --- MAP & SIMULATOR LOGIC ---
         function initMap() {
             if (!map) {
                 const center = demoStartLocations[currentRoute];
@@ -239,7 +275,6 @@
                     const banner = document.getElementById('announcement-banner');
                     banner.innerText = `Network Alert: ${msg}`;
                     banner.style.display = 'block';
-                    // Changed duration from 10 seconds (10000) to 25 seconds (25000)
                     setTimeout(() => { banner.style.display = 'none'; }, 25000); 
                 });
             }
@@ -261,27 +296,22 @@
             const stepLng = (targetLoc.lng - startLoc.lng) / 40;
 
             if (!isTracking) {
-                // Reset flags on new trip
                 hasTriggeredGeofence = false; 
                 hasTriggeredArrival = false;
                 hasTriggeredTraffic = false;
                 trafficTicks = 0;
                 
                 watchId = setInterval(() => {
-                    // Traffic & Speed Sensing Logic
                     if (trafficTicks > 0) {
-                        // "Traffic mode": Reduce speed to 20% of normal
                         simulatedLat += stepLat * 0.2;
                         simulatedLng += stepLng * 0.2;
                         trafficTicks--;
                     } else {
-                        // Normal driving speed
                         simulatedLat += stepLat;
                         simulatedLng += stepLng;
                         
-                        // 6% chance the GPS suddenly detects a drastic speed drop
                         if (Math.random() < 0.06 && !hasTriggeredTraffic) {
-                            trafficTicks = 6; // Simulator stays in traffic for ~12 seconds
+                            trafficTicks = 6; 
                             hasTriggeredTraffic = true;
                             socket.emit('sendAnnouncement', { route: currentRoute, msg: "⚠️ Automated System Alert: Average speed dropped. Traffic congestion detected." });
                             showSentConfirmation("Auto-Traffic Alert");
@@ -295,20 +325,21 @@
                     status.innerText = `[Live Broadcast Active]`;
                     metrics.innerText = `Distance to Pickup: ${distanceToTerminal.toFixed(2)} km`;
 
-                    // 1. Proximity Geofence Alert (5km)
                     if (distanceToTerminal <= 5.0 && !hasTriggeredGeofence) {
                         socket.emit('sendAnnouncement', { route: currentRoute, msg: "📍 Automated System Alert: Shuttle is within 5km of the pickup point." });
                         hasTriggeredGeofence = true; 
                         showSentConfirmation("Auto-Proximity Alert");
                     }
 
-                    // 2. Terminal Arrival Alert (0.2km / 200m)
                     if (distanceToTerminal <= 0.2 && !hasTriggeredArrival) {
                         socket.emit('sendAnnouncement', { route: currentRoute, msg: "✅ Automated System Alert: Shuttle has arrived at the terminal." });
+                        
+                        // Automatically clear the passenger queue upon arrival
+                        socket.emit('driverArrived', currentRoute); 
+
                         hasTriggeredArrival = true;
                         showSentConfirmation("Auto-Arrival Alert");
                         
-                        // End tracking loop automatically upon arrival
                         clearInterval(watchId);
                         isTracking = false;
                         btn.innerText = "Start GPS Broadcasting";
@@ -342,6 +373,12 @@
 
         function sendQuickAlert(presetMsg) {
             socket.emit('sendAnnouncement', { route: currentRoute, msg: presetMsg });
+            
+            // If the driver manually taps the "Arrived" preset, manually wipe the passenger queue
+            if (presetMsg.includes('Arrived at terminal')) {
+                socket.emit('driverArrived', currentRoute);
+            }
+            
             showSentConfirmation("✓ Alert Broadcasted");
         }
 
