@@ -78,22 +78,30 @@
         .timestamp { display: block; font-size: 0.75rem; font-weight: normal; margin-top: 4px; opacity: 0.9;}
         .active-route-label { background: var(--panel-bg); color: var(--mcl-navy); text-align: center; padding: 10px; font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border-light); z-index: 10; }
         
-        /* COMMUTER DASHBOARD */
-        .commuter-dash { background: var(--panel-bg); padding: 15px 20px; border-bottom: 1px solid var(--border-light); z-index: 10; position: relative;}
-        .dash-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        /* COLLAPSIBLE COMMUTER DASHBOARD */
+        .commuter-dash { background: var(--panel-bg); border-bottom: 1px solid var(--border-light); z-index: 10; position: relative;}
+        .dash-header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: var(--panel-bg); transition: background 0.2s;}
+        .dash-header:hover { background: var(--bg-light); }
+        .eta-display { text-align: left; }
         .eta-time { font-size: 1.6rem; font-weight: 700; color: var(--mcl-navy); margin: 0; line-height: 1.1;}
         .eta-status { font-size: 0.85rem; font-weight: 600; margin-top: 2px; }
         .status-ontime { color: #28a745; }
         .status-delayed { color: var(--mcl-red); }
-        .dash-meta { text-align: right; }
-        .last-updated { font-size: 0.7rem; color: var(--text-muted); margin: 0 0 5px 0;}
-        .compact-setting { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        
+        /* Toggle Icon Settings */
+        .dash-toggle-btn { background: var(--bg-light); border: 1px solid var(--border-light); border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; color: var(--mcl-navy); font-size: 0.7rem; transition: transform 0.3s ease; }
+        .dash-toggle-btn.collapsed { transform: rotate(180deg); }
+        
+        .dash-expanded-content { padding: 0 20px 15px 20px; display: none; }
+        .dash-meta-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-top: 1px solid var(--border-light); padding-top: 15px; }
+        .last-updated { font-size: 0.7rem; color: var(--text-muted); margin: 0;}
+        .compact-setting { display: flex; align-items: center; gap: 8px; }
         .compact-setting label { font-size: 0.75rem; margin: 0; color: var(--text-muted); font-weight: 600;}
         .compact-setting input { width: 55px; padding: 4px 8px; margin: 0; font-size: 0.8rem; text-align: center; border: 1px solid var(--border-light); border-radius: 4px; background: var(--bg-light); color: var(--text-dark);}
         
         #map { flex-grow: 1; width: 100%; z-index: 1; }
 
-        /* NEW DRIVER INFO BOTTOM SHEET */
+        /* DRIVER INFO BOTTOM SHEET */
         .driver-info-sheet { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 400px; background: var(--panel-bg); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 15px; display: flex; align-items: center; gap: 15px; z-index: 1000; border: 1px solid var(--border-light); }
         .driver-avatar { font-size: 1.8rem; background: var(--bg-light); border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; border: 2px solid var(--mcl-blue); color: var(--mcl-navy);}
         .driver-details { flex-grow: 1; text-align: left; }
@@ -168,27 +176,32 @@
     <div id="commuter-view">
         <div class="active-route-label" id="commuter-route-display"></div>
         
+        <!-- COLLAPSIBLE COMMUTER DASHBOARD -->
         <div class="commuter-dash">
-            <div class="dash-top-row">
+            <div class="dash-header" onclick="toggleCommuterDash()">
                 <div class="eta-display">
                     <p class="eta-time" id="eta-display">-- mins</p>
                     <p class="eta-status" id="eta-status-text">Awaiting GPS...</p>
                 </div>
-                <div class="dash-meta">
+                <div class="dash-toggle-btn collapsed" id="dashToggleBtn">▲</div>
+            </div>
+            
+            <div class="dash-expanded-content" id="dashExpandedContent">
+                <div class="dash-meta-row">
                     <p class="last-updated" id="map-last-updated">Last Updated: --:--</p>
                     <div class="compact-setting">
                         <label>Alert at (km):</label>
                         <input type="number" id="studentProximityThreshold" value="5.0" step="0.5">
                     </div>
                 </div>
+                <button id="checkInBtn" class="primary-btn full-width" style="margin: 0;" onclick="checkInTerminal()">📍 I'm Waiting at Terminal</button>
             </div>
-            <button id="checkInBtn" class="primary-btn full-width" style="margin: 0;" onclick="checkInTerminal()">📍 I'm Waiting at Terminal</button>
         </div>
         
         <div id="announcement-banner"></div>
         <div id="map"></div>
 
-        <!-- NEW: DRIVER INFO BOTTOM SHEET -->
+        <!-- DRIVER INFO BOTTOM SHEET -->
         <div class="driver-info-sheet">
             <div class="driver-avatar">🧑🏽‍✈️</div>
             <div class="driver-details">
@@ -312,7 +325,6 @@
         let isSettingsOpen = false;
         let hasLoggedFirstItem = false;
 
-        // Fictional Driver Database
         const driverProfiles = {
             'calamba': { name: 'Eduardo Santos', vehicle: 'Toyota Hiace Commuter', plate: 'NDO 4521' },
             'sta-rosa': { name: 'Ricardo Mendoza', vehicle: 'Mitsubishi L300 FB', plate: 'DWT 8832' },
@@ -377,7 +389,6 @@
             document.getElementById('role-selection').style.display = 'none';
             
             if (role === 'commuter') {
-                // Inject Route-Specific Driver Profile
                 const driver = driverProfiles[currentRoute];
                 document.getElementById('driver-name').innerText = driver.name;
                 document.getElementById('driver-vehicle').innerText = driver.vehicle;
@@ -387,6 +398,11 @@
                 document.getElementById('commuter-route-display').innerText = `Viewing: ${routeName}`;
                 document.getElementById('navBell').style.display = 'block'; 
                 document.getElementById('navSettings').style.display = 'block'; 
+                
+                // Ensure dashboard is collapsed by default on load for maximum map space
+                document.getElementById('dashExpandedContent').style.display = 'none';
+                document.getElementById('dashToggleBtn').classList.add('collapsed');
+
                 initMap();
             } else if (role === 'driver') {
                 document.getElementById('driver-view').style.display = 'flex';
@@ -396,11 +412,24 @@
             }
         }
 
+        // --- NEW: COLLAPSIBLE DASHBOARD LOGIC ---
+        function toggleCommuterDash() {
+            const content = document.getElementById('dashExpandedContent');
+            const btn = document.getElementById('dashToggleBtn');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                btn.classList.remove('collapsed');
+            } else {
+                content.style.display = 'none';
+                btn.classList.add('collapsed');
+            }
+        }
+
         function toggleNotifications() {
             const drawer = document.getElementById('notification-drawer');
             isNotifOpen = !isNotifOpen;
             if(isNotifOpen) {
-                if(isSettingsOpen) toggleSettings(); // Close other drawer
+                if(isSettingsOpen) toggleSettings(); 
                 drawer.style.right = '0';
                 unreadCount = 0; 
                 updateBadge();
@@ -413,7 +442,7 @@
             const drawer = document.getElementById('settings-drawer');
             isSettingsOpen = !isSettingsOpen;
             if(isSettingsOpen) {
-                if(isNotifOpen) toggleNotifications(); // Close other drawer
+                if(isNotifOpen) toggleNotifications(); 
                 drawer.style.left = '0';
             } else {
                 drawer.style.left = '-100%';
@@ -432,7 +461,6 @@
 
         function playAudioAlert() {
             if(document.getElementById('audioToggle').checked) {
-                // Short, unobtrusive beep sound using Web Audio API
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
                 osc.type = 'sine';
