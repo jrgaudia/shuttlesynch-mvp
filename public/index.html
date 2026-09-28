@@ -19,11 +19,15 @@
         }
 
         body { margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-light); color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; overflow: hidden;}
+        
+        /* HEADER & NAVIGATION */
         header { padding: 15px 20px; background: var(--panel-bg); display: flex; justify-content: space-between; align-items: center; border-bottom: 8px solid; border-image: linear-gradient(to right, var(--mcl-navy) 25%, var(--mcl-red) 25%, var(--mcl-red) 50%, var(--mcl-gray) 50%, var(--mcl-gray) 75%, var(--mcl-blue) 75%) 1; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 2000;}
+        .header-left { display: flex; align-items: center; gap: 12px; }
         .header-titles h2 { margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--mcl-navy); letter-spacing: 0.5px; }
         .header-titles p { margin: 2px 0 0 0; font-size: 0.75rem; color: var(--mcl-red); font-weight: 600; }
-
-        .bell-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; position: relative; padding: 5px; display: none;}
+        
+        .icon-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; position: relative; padding: 5px; display: none; transition: transform 0.2s;}
+        .icon-btn:hover { transform: scale(1.1); }
         .badge { position: absolute; top: 0; right: 0; background: var(--mcl-red); color: white; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 10px; border: 2px solid var(--panel-bg); display: none;}
 
         .panel-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; gap: 15px; padding: 20px; }
@@ -43,28 +47,40 @@
         .secondary-btn:hover { background: var(--bg-light); border-color: var(--mcl-gray); }
         .secondary-btn.full-width { width: 100%; }
 
-        .back-btn { background: var(--panel-bg); color: var(--text-dark); border: 1px solid var(--border-light); padding: 8px 15px; cursor: pointer; border-radius: 6px; margin: 10px; align-self: flex-start; font-size: 0.9rem; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
         #commuter-view, #driver-view { display: none; flex-direction: column; flex-grow: 1; position: relative;}
         
-        #notification-drawer { position: absolute; top: 0; right: -100%; width: 100%; max-width: 350px; height: 100%; background: var(--panel-bg); box-shadow: -4px 0 15px rgba(0,0,0,0.1); z-index: 1500; transition: right 0.3s ease; display: flex; flex-direction: column;}
+        /* DRAWERS (NOTIFICATIONS & SETTINGS) */
+        .drawer { position: absolute; top: 0; width: 100%; max-width: 350px; height: 100%; background: var(--panel-bg); box-shadow: 0 0 15px rgba(0,0,0,0.15); z-index: 1500; transition: all 0.3s ease; display: flex; flex-direction: column;}
+        #notification-drawer { right: -100%; }
+        #settings-drawer { left: -100%; }
+        
         .drawer-header { padding: 15px; background: var(--bg-light); border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--mcl-navy);}
         .close-drawer { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
-        .log-list { padding: 15px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 10px;}
+        .drawer-content { padding: 15px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 10px;}
+        
         .log-item { padding: 12px; background: var(--bg-light); border: 1px solid var(--border-light); border-left: 4px solid var(--mcl-blue); border-radius: 4px; font-size: 0.85rem;}
         .log-item.delayed { border-left-color: var(--mcl-red); }
         .log-item.arrived { border-left-color: #28a745; }
         .log-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; display: block;}
         
+        .settings-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; text-align: left;}
+        .settings-row label { margin-bottom: 0; color: var(--mcl-navy); font-weight: 600;}
+        
+        /* TOGGLE SWITCH CSS */
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--mcl-blue); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
         #announcement-banner { background: var(--mcl-red); color: white; text-align: center; padding: 12px; font-size: 0.95rem; font-weight: bold; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 1000; position: relative;}
         .timestamp { display: block; font-size: 0.75rem; font-weight: normal; margin-top: 4px; opacity: 0.9;}
+        .active-route-label { background: var(--panel-bg); color: var(--mcl-navy); text-align: center; padding: 10px; font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border-light); z-index: 10; }
         
-        .active-route-label { background: var(--panel-bg); color: var(--mcl-navy); text-align: center; padding: 10px; font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border-light); box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; }
-        
-        /* CLEANED UP COMMUTER DASHBOARD */
-        .commuter-dash { background: var(--panel-bg); padding: 15px 20px; border-bottom: 1px solid var(--border-light); box-shadow: 0 2px 5px rgba(0,0,0,0.02); z-index: 10; position: relative;}
+        /* COMMUTER DASHBOARD */
+        .commuter-dash { background: var(--panel-bg); padding: 15px 20px; border-bottom: 1px solid var(--border-light); z-index: 10; position: relative;}
         .dash-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .eta-display { text-align: left; }
         .eta-time { font-size: 1.6rem; font-weight: 700; color: var(--mcl-navy); margin: 0; line-height: 1.1;}
         .eta-status { font-size: 0.85rem; font-weight: 600; margin-top: 2px; }
         .status-ontime { color: #28a745; }
@@ -74,10 +90,18 @@
         .compact-setting { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
         .compact-setting label { font-size: 0.75rem; margin: 0; color: var(--text-muted); font-weight: 600;}
         .compact-setting input { width: 55px; padding: 4px 8px; margin: 0; font-size: 0.8rem; text-align: center; border: 1px solid var(--border-light); border-radius: 4px; background: var(--bg-light); color: var(--text-dark);}
-        .compact-setting input:focus { outline: none; border-color: var(--mcl-navy); }
-        .check-in-btn { width: 100%; margin: 0; padding: 12px; font-size: 0.95rem; }
-
+        
         #map { flex-grow: 1; width: 100%; z-index: 1; }
+
+        /* NEW DRIVER INFO BOTTOM SHEET */
+        .driver-info-sheet { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); width: calc(100% - 40px); max-width: 400px; background: var(--panel-bg); border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); padding: 15px; display: flex; align-items: center; gap: 15px; z-index: 1000; border: 1px solid var(--border-light); }
+        .driver-avatar { font-size: 1.8rem; background: var(--bg-light); border-radius: 50%; width: 50px; height: 50px; display: flex; justify-content: center; align-items: center; flex-shrink: 0; border: 2px solid var(--mcl-blue); color: var(--mcl-navy);}
+        .driver-details { flex-grow: 1; text-align: left; }
+        .driver-details h4 { margin: 0 0 2px 0; color: var(--mcl-navy); font-size: 1rem; }
+        .driver-details p { margin: 0; font-size: 0.75rem; color: var(--text-muted); }
+        .driver-plate { display: inline-block; background: #FFD700; color: black; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #ccc; margin-top: 4px; font-size: 0.75rem; letter-spacing: 1px;}
+        .support-btn { background: var(--bg-light); border: 1px solid var(--border-light); color: var(--text-dark); border-radius: 6px; padding: 8px 12px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .support-btn:hover { background: #e2e6ea; }
 
         .driver-card { background: var(--panel-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 25px; width: calc(100% - 40px); max-width: 420px; text-align: center; margin: 10px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: 100%; overflow-y: auto;}
         .queue-display { background: var(--bg-light); padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light); }
@@ -88,11 +112,8 @@
         .quick-alert-btn { background: var(--bg-light); color: var(--text-dark); border: 1px solid var(--border-light); padding: 12px 5px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s;}
         .quick-alert-btn:hover { border-color: var(--mcl-navy); background: #f0f4f8; }
         .capacity-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-
-        .settings-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; text-align: left;}
-        .settings-row label { margin-bottom: 0; color: var(--mcl-navy); }
-        .settings-row input { width: 60px; margin-bottom: 0; padding: 8px; text-align: center;}
-
+        .driver-card .settings-row input[type="number"] { width: 60px; margin-bottom: 0; padding: 8px; text-align: center;}
+        
         h4 { margin: 15px 0 10px 0; font-weight: 700; color: var(--mcl-navy); font-size: 1rem; }
         hr { border: 0; border-top: 1px solid var(--border-light); margin: 20px 0; }
         #status { font-size: 0.9rem; color: var(--mcl-navy); margin-top: 12px; font-weight: 700;}
@@ -103,11 +124,14 @@
 <body>
 
     <header>
-        <div class="header-titles">
-            <h2>MAPÚA MCL SHUTTLESYNC</h2>
-            <p>NaviSync Technologies</p>
+        <div class="header-left">
+            <button id="navSettings" class="icon-btn" onclick="toggleSettings()">⚙️</button>
+            <div class="header-titles">
+                <h2>MAPÚA MCL SHUTTLESYNC</h2>
+                <p>NaviSync Technologies</p>
+            </div>
         </div>
-        <button id="navBell" class="bell-btn" onclick="toggleDrawer()">
+        <button id="navBell" class="icon-btn" onclick="toggleNotifications()">
             🔔 <span id="unreadBadge" class="badge">0</span>
         </button>
     </header>
@@ -142,10 +166,8 @@
 
     <!-- COMMUTER INTERFACE -->
     <div id="commuter-view">
-        <button class="back-btn" onclick="goBack()">← Back to Menu</button>
         <div class="active-route-label" id="commuter-route-display"></div>
         
-        <!-- REDESIGNED COMMUTER DASHBOARD -->
         <div class="commuter-dash">
             <div class="dash-top-row">
                 <div class="eta-display">
@@ -160,26 +182,67 @@
                     </div>
                 </div>
             </div>
-            <button id="checkInBtn" class="primary-btn check-in-btn" onclick="checkInTerminal()">📍 I'm Waiting at Terminal</button>
+            <button id="checkInBtn" class="primary-btn full-width" style="margin: 0;" onclick="checkInTerminal()">📍 I'm Waiting at Terminal</button>
         </div>
         
         <div id="announcement-banner"></div>
         <div id="map"></div>
 
-        <div id="notification-drawer">
+        <!-- NEW: DRIVER INFO BOTTOM SHEET -->
+        <div class="driver-info-sheet">
+            <div class="driver-avatar">🧑🏽‍✈️</div>
+            <div class="driver-details">
+                <h4 id="driver-name">Loading...</h4>
+                <p id="driver-vehicle">Loading Vehicle Data</p>
+                <span class="driver-plate" id="driver-plate">XXX 000</span>
+            </div>
+            <button class="support-btn" onclick="alert('Support ticketing system is restricted in this MVP.')">Help</button>
+        </div>
+
+        <!-- NOTIFICATION DRAWER (Right) -->
+        <div id="notification-drawer" class="drawer">
             <div class="drawer-header">
                 Route History Log
-                <button class="close-drawer" onclick="toggleDrawer()">✕</button>
+                <button class="close-drawer" onclick="toggleNotifications()">✕</button>
             </div>
-            <div class="log-list" id="notificationLog">
+            <div class="drawer-content" id="notificationLog">
                 <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">No updates yet.</p>
+            </div>
+        </div>
+
+        <!-- SETTINGS DRAWER (Left) -->
+        <div id="settings-drawer" class="drawer">
+            <div class="drawer-header">
+                System Preferences
+                <button class="close-drawer" onclick="toggleSettings()">✕</button>
+            </div>
+            <div class="drawer-content">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0;">Account Identity</p>
+                <p style="font-size: 1.1rem; color: var(--mcl-navy); font-weight: bold; margin-top: 5px; margin-bottom: 20px;">ID: <span id="display-student-id">Student</span></p>
+                <hr style="margin-top: 0;">
+                <div class="settings-row">
+                    <label>Dark Mode Map</label>
+                    <label class="switch">
+                        <input type="checkbox" id="darkModeToggle" onchange="switchMapTheme()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="settings-row">
+                    <label>Audio Notifications</label>
+                    <label class="switch">
+                        <input type="checkbox" id="audioToggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div style="flex-grow: 1;"></div>
+                <button class="secondary-btn full-width" onclick="location.reload()" style="color: var(--mcl-red); margin-bottom: 20px;">Sign Out</button>
             </div>
         </div>
     </div>
 
     <!-- DRIVER INTERFACE -->
     <div id="driver-view">
-        <button class="back-btn" onclick="goBack()" style="margin: 15px auto 0 auto; flex-shrink: 0;">← Back to Menu</button>
+        <button class="back-btn" onclick="location.reload()" style="margin: 15px auto 0 auto; flex-shrink: 0;">← Exit Console</button>
         <div class="driver-card">
             <h3 id="driver-route-display" style="margin-top:0; color: var(--mcl-navy);"></h3>
             
@@ -197,13 +260,11 @@
                 <label>Arrival Threshold (km):</label>
                 <input type="number" id="arrivalThreshold" value="0.2" step="0.1" min="0.1">
             </div>
-
             <hr>
             
             <button id="toggleBtn" class="primary-btn full-width" style="padding: 16px; font-size: 1.1rem;" onclick="toggleTracking()">Start GPS Broadcasting</button>
             <p id="status">Status: Offline</p>
             <p id="distance-metrics"></p>
-            
             <hr>
             
             <h4>Passenger Capacity</h4>
@@ -220,7 +281,6 @@
                 <button class="quick-alert-btn" onclick="sendQuickAlert('⏳ Departing in 5 mins.')">Leaving Soon</button>
                 <button class="quick-alert-btn" onclick="sendQuickAlert('⚠️ Delayed: Arriving late.')">Arriving Late</button>
             </div>
-            
             <hr>
 
             <label style="text-align: left;">Manual Override</label>
@@ -235,6 +295,7 @@
     <script>
         const socket = io();
         let map;
+        let tileLayer;
         let shuttleMarker = null;
         let terminalMarker = null;
         let watchId = null;
@@ -247,8 +308,18 @@
         let trafficTicks = 0;
         
         let unreadCount = 0;
-        let isDrawerOpen = false;
+        let isNotifOpen = false;
+        let isSettingsOpen = false;
         let hasLoggedFirstItem = false;
+
+        // Fictional Driver Database
+        const driverProfiles = {
+            'calamba': { name: 'Eduardo Santos', vehicle: 'Toyota Hiace Commuter', plate: 'NDO 4521' },
+            'sta-rosa': { name: 'Ricardo Mendoza', vehicle: 'Mitsubishi L300 FB', plate: 'DWT 8832' },
+            'binan': { name: 'Felipe Villanueva', vehicle: 'Nissan NV350 Urvan', plate: 'NGL 1024' },
+            'san-pedro': { name: 'Jose Garcia', vehicle: 'Toyota Hiace Grandia', plate: 'PQS 7750' },
+            'carmona': { name: 'Antonio Reyes', vehicle: 'Mitsubishi L300 Exceed', plate: 'WXY 9012' }
+        };
 
         const demoStartLocations = {
             'calamba': { lat: 14.1925, lng: 121.1332 }, 
@@ -280,6 +351,8 @@
         }
 
         function proceedToRoleSelection() {
+            const studentId = document.getElementById('studentId').value || "Guest";
+            document.getElementById('display-student-id').innerText = studentId;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('role-selection').style.display = 'flex';
         }
@@ -304,35 +377,46 @@
             document.getElementById('role-selection').style.display = 'none';
             
             if (role === 'commuter') {
+                // Inject Route-Specific Driver Profile
+                const driver = driverProfiles[currentRoute];
+                document.getElementById('driver-name').innerText = driver.name;
+                document.getElementById('driver-vehicle').innerText = driver.vehicle;
+                document.getElementById('driver-plate').innerText = driver.plate;
+
                 document.getElementById('commuter-view').style.display = 'flex';
                 document.getElementById('commuter-route-display').innerText = `Viewing: ${routeName}`;
                 document.getElementById('navBell').style.display = 'block'; 
+                document.getElementById('navSettings').style.display = 'block'; 
                 initMap();
             } else if (role === 'driver') {
                 document.getElementById('driver-view').style.display = 'flex';
                 document.getElementById('driver-route-display').innerText = `${routeName} Console`;
                 document.getElementById('navBell').style.display = 'none'; 
+                document.getElementById('navSettings').style.display = 'none'; 
             }
         }
 
-        function goBack() {
-            document.getElementById('commuter-view').style.display = 'none';
-            document.getElementById('driver-view').style.display = 'none';
-            document.getElementById('navBell').style.display = 'none';
-            document.getElementById('role-selection').style.display = 'flex';
-            if (isDrawerOpen) toggleDrawer();
-            if (isTracking) toggleTracking();
-        }
-
-        function toggleDrawer() {
+        function toggleNotifications() {
             const drawer = document.getElementById('notification-drawer');
-            isDrawerOpen = !isDrawerOpen;
-            if(isDrawerOpen) {
+            isNotifOpen = !isNotifOpen;
+            if(isNotifOpen) {
+                if(isSettingsOpen) toggleSettings(); // Close other drawer
                 drawer.style.right = '0';
                 unreadCount = 0; 
                 updateBadge();
             } else {
                 drawer.style.right = '-100%';
+            }
+        }
+
+        function toggleSettings() {
+            const drawer = document.getElementById('settings-drawer');
+            isSettingsOpen = !isSettingsOpen;
+            if(isSettingsOpen) {
+                if(isNotifOpen) toggleNotifications(); // Close other drawer
+                drawer.style.left = '0';
+            } else {
+                drawer.style.left = '-100%';
             }
         }
 
@@ -344,6 +428,27 @@
             } else {
                 badge.style.display = 'none';
             }
+        }
+
+        function playAudioAlert() {
+            if(document.getElementById('audioToggle').checked) {
+                // Short, unobtrusive beep sound using Web Audio API
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, ctx.currentTime);
+                osc.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            }
+        }
+
+        function switchMapTheme() {
+            if(!map) return;
+            const isDark = document.getElementById('darkModeToggle').checked;
+            const lightUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+            const darkUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+            tileLayer.setUrl(isDark ? darkUrl : lightUrl);
         }
 
         function appendToLog(msg) {
@@ -365,10 +470,11 @@
             
             logContainer.prepend(newItem);
 
-            if(!isDrawerOpen) {
+            if(!isNotifOpen) {
                 unreadCount++;
                 updateBadge();
             }
+            playAudioAlert();
         }
 
         function checkInTerminal() {
@@ -396,8 +502,9 @@
             if (!map) {
                 const center = demoStartLocations[currentRoute];
                 map = L.map('map', { zoomControl: false }).setView([center.lat, center.lng], 13);
-                L.control.zoom({ position: 'bottomleft' }).addTo(map);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+                L.control.zoom({ position: 'bottomright' }).addTo(map);
+                
+                tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
 
                 socket.on('updateMap', (data) => {
                     const latLng = [data.lat, data.lng];
