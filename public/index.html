@@ -31,12 +31,12 @@
         .badge { position: absolute; top: 0; right: 0; background: var(--mcl-red); color: white; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 10px; border: 2px solid var(--panel-bg); display: none;}
 
         .panel-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; gap: 15px; padding: 20px; }
-        .auth-card { background: var(--panel-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-light); width: 100%; max-width: 420px; text-align: left; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .auth-card { background: var(--panel-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-light); width: 100%; max-width: 420px; text-align: left; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative;}
         .auth-card.center-text { text-align: center; }
 
         label { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 8px; }
-        input[type="text"], input[type="number"], select { width: calc(100% - 24px); padding: 12px; margin-bottom: 20px; background: var(--panel-bg); border: 1px solid var(--border-light); color: var(--text-dark); border-radius: 6px; font-family: inherit; font-size: 1rem; transition: border-color 0.2s; }
-        input[type="text"]:focus, input[type="number"]:focus, select:focus { outline: none; border-color: var(--mcl-navy); box-shadow: 0 0 0 3px rgba(0, 39, 82, 0.1); }
+        input[type="text"], input[type="password"], input[type="number"], select { width: calc(100% - 24px); padding: 12px; margin-bottom: 20px; background: var(--panel-bg); border: 1px solid var(--border-light); color: var(--text-dark); border-radius: 6px; font-family: inherit; font-size: 1rem; transition: border-color 0.2s; }
+        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, select:focus { outline: none; border-color: var(--mcl-navy); box-shadow: 0 0 0 3px rgba(0, 39, 82, 0.1); }
 
         .primary-btn { padding: 12px 20px; font-size: 1rem; background: var(--mcl-red); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
         .primary-btn:hover { background: #c4132e; }
@@ -88,7 +88,6 @@
         .status-ontime { color: #28a745; }
         .status-delayed { color: var(--mcl-red); }
         
-        /* Toggle Icon Settings */
         .dash-toggle-btn { background: var(--bg-light); border: 1px solid var(--border-light); border-radius: 50%; width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; color: var(--mcl-navy); font-size: 0.7rem; transition: transform 0.3s ease; }
         .dash-toggle-btn.collapsed { transform: rotate(180deg); }
         
@@ -144,17 +143,41 @@
         </button>
     </header>
 
-    <div id="login-screen" class="panel-container">
+    <!-- STEP 1: ROLE CHOICE -->
+    <div id="role-choice-screen" class="panel-container">
         <div class="auth-card center-text">
-            <h3 style="margin-top: 0; color: var(--mcl-red); font-size: 1.5rem;">Institutional Access</h3>
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 25px;">Authenticate with your institutional ID to access live campus routes.</p>
-            <label style="text-align: left;">Student / Employee Number</label>
-            <input type="text" id="studentId" placeholder="e.g., 2023150505">
-            <button class="primary-btn full-width" onclick="proceedToRoleSelection()" style="margin-top: 10px;">Access ShuttleSync</button>
+            <h3 style="margin-top: 0; color: var(--mcl-navy); font-size: 1.5rem;">ShuttleSync Portal</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 25px;">Select your institutional role to continue.</p>
+            <button class="primary-btn full-width" onclick="showLogin('student')">Student Commuter</button>
+            <button class="secondary-btn full-width" onclick="showLogin('staff')">Transport Staff (Driver)</button>
         </div>
     </div>
 
-    <div id="role-selection" class="panel-container" style="display: none;">
+    <!-- STEP 2: CREDENTIAL LOGIN -->
+    <div id="login-screen" class="panel-container" style="display: none;">
+        <div class="auth-card center-text">
+            <button class="back-btn" onclick="goBackToRoleChoice()" style="position: absolute; top: 15px; left: 15px; margin: 0; padding: 4px 10px; font-size:0.8rem;">← Back</button>
+            <h3 id="login-title" style="margin-top: 10px; font-size: 1.5rem;">Access</h3>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 25px;">Enter your credentials.</p>
+            
+            <label style="text-align: left;" id="id-label">ID Number</label>
+            <input type="text" id="userId" placeholder="...">
+            
+            <label style="text-align: left;">Password</label>
+            <input type="password" id="userPass" placeholder="••••••••">
+            
+            <p id="login-error" style="color: var(--mcl-red); font-size: 0.85rem; font-weight: bold; margin-top: -10px; margin-bottom: 15px; display: none;">Invalid credentials.</p>
+
+            <button class="primary-btn full-width" onclick="authenticateUser()" style="margin-top: 5px;">Sign In</button>
+            
+            <p id="signup-prompt" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 15px;">
+                New student? <a href="#" onclick="alert('MVP Demo active. Please use ID: 2023150505 to login.')" style="color: var(--mcl-blue); text-decoration: none; font-weight: bold;">Create an account</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- STEP 3: ROUTE SELECTION -->
+    <div id="route-selection" class="panel-container" style="display: none;">
         <div class="auth-card center-text">
             <h3 style="margin-top: 0; color: var(--mcl-navy);">System Configuration</h3>
             <label style="text-align: left; margin-top: 20px;">Select Terminal Route</label>
@@ -167,8 +190,9 @@
                 <option value="carmona">Carmona Terminal</option>
             </select>
             <hr>
-            <button class="primary-btn full-width" onclick="initializeRole('commuter')">Access Commuter Map</button>
-            <button class="secondary-btn full-width" onclick="initializeRole('driver')">Open Driver Console</button>
+            <!-- These buttons are dynamically hidden/shown based on login role -->
+            <button id="commuter-action-btn" class="primary-btn full-width" onclick="initializeRole('commuter')">Access Commuter Map</button>
+            <button id="driver-action-btn" class="secondary-btn full-width" onclick="initializeRole('driver')">Open Driver Console</button>
         </div>
     </div>
 
@@ -176,7 +200,6 @@
     <div id="commuter-view">
         <div class="active-route-label" id="commuter-route-display"></div>
         
-        <!-- COLLAPSIBLE COMMUTER DASHBOARD -->
         <div class="commuter-dash">
             <div class="dash-header" onclick="toggleCommuterDash()">
                 <div class="eta-display">
@@ -201,7 +224,6 @@
         <div id="announcement-banner"></div>
         <div id="map"></div>
 
-        <!-- DRIVER INFO BOTTOM SHEET -->
         <div class="driver-info-sheet">
             <div class="driver-avatar">🧑🏽‍✈️</div>
             <div class="driver-details">
@@ -212,7 +234,6 @@
             <button class="support-btn" onclick="alert('Support ticketing system is restricted in this MVP.')">Help</button>
         </div>
 
-        <!-- NOTIFICATION DRAWER (Right) -->
         <div id="notification-drawer" class="drawer">
             <div class="drawer-header">
                 Route History Log
@@ -223,7 +244,6 @@
             </div>
         </div>
 
-        <!-- SETTINGS DRAWER (Left) -->
         <div id="settings-drawer" class="drawer">
             <div class="drawer-header">
                 System Preferences
@@ -324,6 +344,8 @@
         let isNotifOpen = false;
         let isSettingsOpen = false;
         let hasLoggedFirstItem = false;
+        
+        let activeAuthRole = ''; // Tracks if user is trying to log in as student or staff
 
         const driverProfiles = {
             'calamba': { name: 'Eduardo Santos', vehicle: 'Toyota Hiace Commuter', plate: 'NDO 4521' },
@@ -349,6 +371,87 @@
             'carmona': { lat: 14.3148, lng: 121.0543 }
         };
 
+        // --- AUTHENTICATION LOGIC ---
+        function showLogin(role) {
+            activeAuthRole = role;
+            document.getElementById('role-choice-screen').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('login-error').style.display = 'none';
+            document.getElementById('userId').value = '';
+            document.getElementById('userPass').value = '';
+
+            const title = document.getElementById('login-title');
+            const label = document.getElementById('id-label');
+            const input = document.getElementById('userId');
+            const signup = document.getElementById('signup-prompt');
+
+            if (role === 'student') {
+                title.innerText = "Student Access";
+                title.style.color = "var(--mcl-red)";
+                label.innerText = "Student Number";
+                input.placeholder = "e.g., 2023150505";
+                signup.style.display = "block";
+            } else {
+                title.innerText = "Staff Access";
+                title.style.color = "var(--mcl-navy)";
+                label.innerText = "Driver / Staff ID";
+                input.placeholder = "e.g., STAFF01";
+                signup.style.display = "none";
+            }
+        }
+
+        function goBackToRoleChoice() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('role-choice-screen').style.display = 'flex';
+        }
+
+        function authenticateUser() {
+            const id = document.getElementById('userId').value.trim();
+            const pass = document.getElementById('userPass').value.trim();
+            const errorEl = document.getElementById('login-error');
+
+            if(!id || !pass) {
+                errorEl.innerText = "Please enter both ID and password.";
+                errorEl.style.display = "block";
+                return;
+            }
+
+            let isAuthenticated = false;
+
+            // Simulated Frontend Gatekeeper
+            if (activeAuthRole === 'student') {
+                if (id === '2023150505') { 
+                    isAuthenticated = true; // Accepts any password for this demo ID
+                } else {
+                    errorEl.innerText = "Student ID not found in MVP database.";
+                }
+            } else if (activeAuthRole === 'staff') {
+                if (id === 'STAFF01' && pass === 'admin123') {
+                    isAuthenticated = true;
+                } else {
+                    errorEl.innerText = "Invalid Staff credentials or password.";
+                }
+            }
+
+            if (isAuthenticated) {
+                document.getElementById('display-student-id').innerText = id;
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('route-selection').style.display = 'flex';
+
+                // Restrict UI buttons based on authenticated role
+                if (activeAuthRole === 'student') {
+                    document.getElementById('commuter-action-btn').style.display = 'block';
+                    document.getElementById('driver-action-btn').style.display = 'none';
+                } else {
+                    document.getElementById('commuter-action-btn').style.display = 'none';
+                    document.getElementById('driver-action-btn').style.display = 'block';
+                }
+            } else {
+                errorEl.style.display = "block";
+            }
+        }
+
+        // --- MAP & SYSTEM LOGIC ---
         function getCurrentTime() {
             return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         }
@@ -362,31 +465,26 @@
             return R * c;
         }
 
-        function proceedToRoleSelection() {
-            const studentId = document.getElementById('studentId').value || "Guest";
-            document.getElementById('display-student-id').innerText = studentId;
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('role-selection').style.display = 'flex';
-        }
-
         function initializeRole(role) {
             const dropdown = document.getElementById('routeSelect');
             if(!dropdown.value) { alert("Please select a route first."); return; }
             currentRoute = dropdown.value;
             const routeName = dropdown.options[dropdown.selectedIndex].text;
 
-            const checkInBtn = document.getElementById('checkInBtn');
-            checkInBtn.disabled = false;
-            checkInBtn.innerText = "📍 I'm Waiting at Terminal";
-            hasTriggeredLocalProximity = false; 
+            if (role === 'commuter') {
+                const checkInBtn = document.getElementById('checkInBtn');
+                checkInBtn.disabled = false;
+                checkInBtn.innerText = "📍 I'm Waiting at Terminal";
+                hasTriggeredLocalProximity = false; 
 
-            document.getElementById('notificationLog').innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">No updates yet.</p>';
-            hasLoggedFirstItem = false;
-            unreadCount = 0;
-            updateBadge();
+                document.getElementById('notificationLog').innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">No updates yet.</p>';
+                hasLoggedFirstItem = false;
+                unreadCount = 0;
+                updateBadge();
+            }
 
             socket.emit('joinRoute', currentRoute);
-            document.getElementById('role-selection').style.display = 'none';
+            document.getElementById('route-selection').style.display = 'none';
             
             if (role === 'commuter') {
                 const driver = driverProfiles[currentRoute];
@@ -399,7 +497,6 @@
                 document.getElementById('navBell').style.display = 'block'; 
                 document.getElementById('navSettings').style.display = 'block'; 
                 
-                // Ensure dashboard is collapsed by default on load for maximum map space
                 document.getElementById('dashExpandedContent').style.display = 'none';
                 document.getElementById('dashToggleBtn').classList.add('collapsed');
 
@@ -412,7 +509,6 @@
             }
         }
 
-        // --- NEW: COLLAPSIBLE DASHBOARD LOGIC ---
         function toggleCommuterDash() {
             const content = document.getElementById('dashExpandedContent');
             const btn = document.getElementById('dashToggleBtn');
