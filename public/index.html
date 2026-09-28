@@ -23,7 +23,6 @@
         .header-titles h2 { margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--mcl-navy); letter-spacing: 0.5px; }
         .header-titles p { margin: 2px 0 0 0; font-size: 0.75rem; color: var(--mcl-red); font-weight: 600; }
 
-        /* Notification Bell UI */
         .bell-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; position: relative; padding: 5px; display: none;}
         .badge { position: absolute; top: 0; right: 0; background: var(--mcl-red); color: white; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 10px; border: 2px solid var(--panel-bg); display: none;}
 
@@ -48,7 +47,6 @@
 
         #commuter-view, #driver-view { display: none; flex-direction: column; flex-grow: 1; position: relative;}
         
-        /* Notification Drawer */
         #notification-drawer { position: absolute; top: 0; right: -100%; width: 100%; max-width: 350px; height: 100%; background: var(--panel-bg); box-shadow: -4px 0 15px rgba(0,0,0,0.1); z-index: 1500; transition: right 0.3s ease; display: flex; flex-direction: column;}
         .drawer-header { padding: 15px; background: var(--bg-light); border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--mcl-navy);}
         .close-drawer { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
@@ -61,17 +59,24 @@
         #announcement-banner { background: var(--mcl-red); color: white; text-align: center; padding: 12px; font-size: 0.95rem; font-weight: bold; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 1000; position: relative;}
         .timestamp { display: block; font-size: 0.75rem; font-weight: normal; margin-top: 4px; opacity: 0.9;}
         
-        .active-route-label { background: var(--panel-bg); color: var(--mcl-navy); text-align: center; padding: 10px; font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border-light); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .active-route-label { background: var(--panel-bg); color: var(--mcl-navy); text-align: center; padding: 10px; font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border-light); box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10; }
         
-        .commuter-dash { background: var(--bg-light); padding: 15px; border-bottom: 1px solid var(--border-light); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;}
-        .eta-display { background: var(--panel-bg); border: 1px solid var(--border-light); padding: 10px; border-radius: 6px; text-align: center; }
-        .eta-time { font-size: 1.2rem; font-weight: 700; color: var(--mcl-navy); margin: 0;}
-        .eta-status { font-size: 0.8rem; font-weight: 600; margin-top: 3px; }
+        /* CLEANED UP COMMUTER DASHBOARD */
+        .commuter-dash { background: var(--panel-bg); padding: 15px 20px; border-bottom: 1px solid var(--border-light); box-shadow: 0 2px 5px rgba(0,0,0,0.02); z-index: 10; position: relative;}
+        .dash-top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .eta-display { text-align: left; }
+        .eta-time { font-size: 1.6rem; font-weight: 700; color: var(--mcl-navy); margin: 0; line-height: 1.1;}
+        .eta-status { font-size: 0.85rem; font-weight: 600; margin-top: 2px; }
         .status-ontime { color: #28a745; }
         .status-delayed { color: var(--mcl-red); }
-        .last-updated { font-size: 0.75rem; color: var(--text-muted); text-align: center; grid-column: span 2; margin-top: 5px;}
+        .dash-meta { text-align: right; }
+        .last-updated { font-size: 0.7rem; color: var(--text-muted); margin: 0 0 5px 0;}
+        .compact-setting { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+        .compact-setting label { font-size: 0.75rem; margin: 0; color: var(--text-muted); font-weight: 600;}
+        .compact-setting input { width: 55px; padding: 4px 8px; margin: 0; font-size: 0.8rem; text-align: center; border: 1px solid var(--border-light); border-radius: 4px; background: var(--bg-light); color: var(--text-dark);}
+        .compact-setting input:focus { outline: none; border-color: var(--mcl-navy); }
+        .check-in-btn { width: 100%; margin: 0; padding: 12px; font-size: 0.95rem; }
 
-        .check-in-btn { grid-column: span 2; }
         #map { flex-grow: 1; width: 100%; z-index: 1; }
 
         .driver-card { background: var(--panel-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 25px; width: calc(100% - 40px); max-width: 420px; text-align: center; margin: 10px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: 100%; overflow-y: auto;}
@@ -140,30 +145,33 @@
         <button class="back-btn" onclick="goBack()">← Back to Menu</button>
         <div class="active-route-label" id="commuter-route-display"></div>
         
+        <!-- REDESIGNED COMMUTER DASHBOARD -->
         <div class="commuter-dash">
-            <div class="settings-row" style="grid-column: 1; flex-direction: column; align-items: flex-start; margin-bottom:0;">
-                <label style="font-size: 0.8rem;">Alert me at (km):</label>
-                <input type="number" id="studentProximityThreshold" value="5.0" step="0.5" style="width: 100%; margin-top: 5px;">
-            </div>
-            <div class="eta-display">
-                <p class="eta-time" id="eta-display">-- mins</p>
-                <p class="eta-status" id="eta-status-text">Awaiting GPS...</p>
+            <div class="dash-top-row">
+                <div class="eta-display">
+                    <p class="eta-time" id="eta-display">-- mins</p>
+                    <p class="eta-status" id="eta-status-text">Awaiting GPS...</p>
+                </div>
+                <div class="dash-meta">
+                    <p class="last-updated" id="map-last-updated">Last Updated: --:--</p>
+                    <div class="compact-setting">
+                        <label>Alert at (km):</label>
+                        <input type="number" id="studentProximityThreshold" value="5.0" step="0.5">
+                    </div>
+                </div>
             </div>
             <button id="checkInBtn" class="primary-btn check-in-btn" onclick="checkInTerminal()">📍 I'm Waiting at Terminal</button>
-            <p class="last-updated" id="map-last-updated">Last Updated: --:--</p>
         </div>
         
         <div id="announcement-banner"></div>
         <div id="map"></div>
 
-        <!-- NOTIFICATION DRAWER -->
         <div id="notification-drawer">
             <div class="drawer-header">
                 Route History Log
                 <button class="close-drawer" onclick="toggleDrawer()">✕</button>
             </div>
             <div class="log-list" id="notificationLog">
-                <!-- Javascript will inject history items here -->
                 <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">No updates yet.</p>
             </div>
         </div>
@@ -287,7 +295,6 @@
             checkInBtn.innerText = "📍 I'm Waiting at Terminal";
             hasTriggeredLocalProximity = false; 
 
-            // Reset Notification Panel on new route
             document.getElementById('notificationLog').innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">No updates yet.</p>';
             hasLoggedFirstItem = false;
             unreadCount = 0;
@@ -299,12 +306,12 @@
             if (role === 'commuter') {
                 document.getElementById('commuter-view').style.display = 'flex';
                 document.getElementById('commuter-route-display').innerText = `Viewing: ${routeName}`;
-                document.getElementById('navBell').style.display = 'block'; // Show bell
+                document.getElementById('navBell').style.display = 'block'; 
                 initMap();
             } else if (role === 'driver') {
                 document.getElementById('driver-view').style.display = 'flex';
                 document.getElementById('driver-route-display').innerText = `${routeName} Console`;
-                document.getElementById('navBell').style.display = 'none'; // Hide bell for driver
+                document.getElementById('navBell').style.display = 'none'; 
             }
         }
 
@@ -322,7 +329,7 @@
             isDrawerOpen = !isDrawerOpen;
             if(isDrawerOpen) {
                 drawer.style.right = '0';
-                unreadCount = 0; // Clear badge on open
+                unreadCount = 0; 
                 updateBadge();
             } else {
                 drawer.style.right = '-100%';
@@ -348,7 +355,6 @@
                 hasLoggedFirstItem = true;
             }
 
-            // Determine border color based on keywords
             let extraClass = '';
             if (msg.toLowerCase().includes('delay') || msg.toLowerCase().includes('traffic')) extraClass = 'delayed';
             if (msg.toLowerCase().includes('arrived') || msg.toLowerCase().includes('available')) extraClass = 'arrived';
@@ -357,7 +363,6 @@
             newItem.className = `log-item ${extraClass}`;
             newItem.innerHTML = `${msg} <span class="log-time">${time}</span>`;
             
-            // Insert at the top of the list
             logContainer.prepend(newItem);
 
             if(!isDrawerOpen) {
