@@ -18,10 +18,14 @@
             --border-light: #DEE2E6;
         }
 
-        body { margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-light); color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; }
-        header { padding: 20px; background: var(--panel-bg); text-align: center; border-bottom: 8px solid; border-image: linear-gradient(to right, var(--mcl-navy) 25%, var(--mcl-red) 25%, var(--mcl-red) 50%, var(--mcl-gray) 50%, var(--mcl-gray) 75%, var(--mcl-blue) 75%) 1; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: var(--mcl-navy); letter-spacing: 0.5px; }
-        header p { margin: 5px 0 0 0; font-size: 0.85rem; color: var(--mcl-red); font-weight: 600; }
+        body { margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-light); color: var(--text-dark); display: flex; flex-direction: column; height: 100vh; overflow: hidden;}
+        header { padding: 15px 20px; background: var(--panel-bg); display: flex; justify-content: space-between; align-items: center; border-bottom: 8px solid; border-image: linear-gradient(to right, var(--mcl-navy) 25%, var(--mcl-red) 25%, var(--mcl-red) 50%, var(--mcl-gray) 50%, var(--mcl-gray) 75%, var(--mcl-blue) 75%) 1; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); z-index: 2000;}
+        .header-titles h2 { margin: 0; font-size: 1.3rem; font-weight: 700; color: var(--mcl-navy); letter-spacing: 0.5px; }
+        .header-titles p { margin: 2px 0 0 0; font-size: 0.75rem; color: var(--mcl-red); font-weight: 600; }
+
+        /* Notification Bell UI */
+        .bell-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; position: relative; padding: 5px; display: none;}
+        .badge { position: absolute; top: 0; right: 0; background: var(--mcl-red); color: white; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 10px; border: 2px solid var(--panel-bg); display: none;}
 
         .panel-container { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-grow: 1; gap: 15px; padding: 20px; }
         .auth-card { background: var(--panel-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--border-light); width: 100%; max-width: 420px; text-align: left; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
@@ -42,13 +46,23 @@
 
         .back-btn { background: var(--panel-bg); color: var(--text-dark); border: 1px solid var(--border-light); padding: 8px 15px; cursor: pointer; border-radius: 6px; margin: 10px; align-self: flex-start; font-size: 0.9rem; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        #commuter-view, #driver-view { display: none; flex-direction: column; flex-grow: 1; }
+        #commuter-view, #driver-view { display: none; flex-direction: column; flex-grow: 1; position: relative;}
+        
+        /* Notification Drawer */
+        #notification-drawer { position: absolute; top: 0; right: -100%; width: 100%; max-width: 350px; height: 100%; background: var(--panel-bg); box-shadow: -4px 0 15px rgba(0,0,0,0.1); z-index: 1500; transition: right 0.3s ease; display: flex; flex-direction: column;}
+        .drawer-header { padding: 15px; background: var(--bg-light); border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; font-weight: bold; color: var(--mcl-navy);}
+        .close-drawer { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted); }
+        .log-list { padding: 15px; overflow-y: auto; flex-grow: 1; display: flex; flex-direction: column; gap: 10px;}
+        .log-item { padding: 12px; background: var(--bg-light); border: 1px solid var(--border-light); border-left: 4px solid var(--mcl-blue); border-radius: 4px; font-size: 0.85rem;}
+        .log-item.delayed { border-left-color: var(--mcl-red); }
+        .log-item.arrived { border-left-color: #28a745; }
+        .log-time { font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; display: block;}
+        
         #announcement-banner { background: var(--mcl-red); color: white; text-align: center; padding: 12px; font-size: 0.95rem; font-weight: bold; display: none; box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 1000; position: relative;}
         .timestamp { display: block; font-size: 0.75rem; font-weight: normal; margin-top: 4px; opacity: 0.9;}
         
         .active-route-label { background: var(--panel-bg); color: var(--mcl-navy); text-align: center; padding: 10px; font-size: 0.95rem; font-weight: 700; border-bottom: 1px solid var(--border-light); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        /* New Commuter Dash Panel */
         .commuter-dash { background: var(--bg-light); padding: 15px; border-bottom: 1px solid var(--border-light); display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;}
         .eta-display { background: var(--panel-bg); border: 1px solid var(--border-light); padding: 10px; border-radius: 6px; text-align: center; }
         .eta-time { font-size: 1.2rem; font-weight: 700; color: var(--mcl-navy); margin: 0;}
@@ -60,7 +74,7 @@
         .check-in-btn { grid-column: span 2; }
         #map { flex-grow: 1; width: 100%; z-index: 1; }
 
-        .driver-card { background: var(--panel-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 25px; width: calc(100% - 40px); max-width: 420px; text-align: center; margin: 10px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .driver-card { background: var(--panel-bg); border: 1px solid var(--border-light); border-radius: 12px; padding: 25px; width: calc(100% - 40px); max-width: 420px; text-align: center; margin: 10px auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: 100%; overflow-y: auto;}
         .queue-display { background: var(--bg-light); padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-light); }
         .queue-display h2 { margin: 0; color: var(--mcl-red); font-size: 2.5rem; }
         .queue-display p { margin: 5px 0 0 0; font-size: 0.9rem; color: var(--text-muted); font-weight: 600; }
@@ -84,11 +98,15 @@
 <body>
 
     <header>
-        <h2>MAPÚA MCL SHUTTLESYNC</h2>
-        <p>NaviSync Technologies</p>
+        <div class="header-titles">
+            <h2>MAPÚA MCL SHUTTLESYNC</h2>
+            <p>NaviSync Technologies</p>
+        </div>
+        <button id="navBell" class="bell-btn" onclick="toggleDrawer()">
+            🔔 <span id="unreadBadge" class="badge">0</span>
+        </button>
     </header>
 
-    <!-- AUTHENTICATION -->
     <div id="login-screen" class="panel-container">
         <div class="auth-card center-text">
             <h3 style="margin-top: 0; color: var(--mcl-red); font-size: 1.5rem;">Institutional Access</h3>
@@ -99,7 +117,6 @@
         </div>
     </div>
 
-    <!-- ROLE SELECTION -->
     <div id="role-selection" class="panel-container" style="display: none;">
         <div class="auth-card center-text">
             <h3 style="margin-top: 0; color: var(--mcl-navy);">System Configuration</h3>
@@ -124,29 +141,37 @@
         <div class="active-route-label" id="commuter-route-display"></div>
         
         <div class="commuter-dash">
-            <!-- Student Parameter: Custom Alert Distance -->
             <div class="settings-row" style="grid-column: 1; flex-direction: column; align-items: flex-start; margin-bottom:0;">
                 <label style="font-size: 0.8rem;">Alert me at (km):</label>
                 <input type="number" id="studentProximityThreshold" value="5.0" step="0.5" style="width: 100%; margin-top: 5px;">
             </div>
-            
-            <!-- Live ETA & Delay Status -->
             <div class="eta-display">
                 <p class="eta-time" id="eta-display">-- mins</p>
                 <p class="eta-status" id="eta-status-text">Awaiting GPS...</p>
             </div>
-            
             <button id="checkInBtn" class="primary-btn check-in-btn" onclick="checkInTerminal()">📍 I'm Waiting at Terminal</button>
             <p class="last-updated" id="map-last-updated">Last Updated: --:--</p>
         </div>
         
         <div id="announcement-banner"></div>
         <div id="map"></div>
+
+        <!-- NOTIFICATION DRAWER -->
+        <div id="notification-drawer">
+            <div class="drawer-header">
+                Route History Log
+                <button class="close-drawer" onclick="toggleDrawer()">✕</button>
+            </div>
+            <div class="log-list" id="notificationLog">
+                <!-- Javascript will inject history items here -->
+                <p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">No updates yet.</p>
+            </div>
+        </div>
     </div>
 
     <!-- DRIVER INTERFACE -->
     <div id="driver-view">
-        <button class="back-btn" onclick="goBack()" style="margin: 15px auto 0 auto;">← Back to Menu</button>
+        <button class="back-btn" onclick="goBack()" style="margin: 15px auto 0 auto; flex-shrink: 0;">← Back to Menu</button>
         <div class="driver-card">
             <h3 id="driver-route-display" style="margin-top:0; color: var(--mcl-navy);"></h3>
             
@@ -155,7 +180,6 @@
                 <p>Passengers Waiting at Terminal</p>
             </div>
             
-            <!-- Driver Parameters: Interval and Accuracy -->
             <h4>System Parameters</h4>
             <div class="settings-row">
                 <label>Broadcast Interval (seconds):</label>
@@ -213,6 +237,10 @@
         let hasTriggeredArrival = false;
         let hasTriggeredTraffic = false;
         let trafficTicks = 0;
+        
+        let unreadCount = 0;
+        let isDrawerOpen = false;
+        let hasLoggedFirstItem = false;
 
         const demoStartLocations = {
             'calamba': { lat: 14.1925, lng: 121.1332 }, 
@@ -257,7 +285,13 @@
             const checkInBtn = document.getElementById('checkInBtn');
             checkInBtn.disabled = false;
             checkInBtn.innerText = "📍 I'm Waiting at Terminal";
-            hasTriggeredLocalProximity = false; // Reset student alert on fresh load
+            hasTriggeredLocalProximity = false; 
+
+            // Reset Notification Panel on new route
+            document.getElementById('notificationLog').innerHTML = '<p style="text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">No updates yet.</p>';
+            hasLoggedFirstItem = false;
+            unreadCount = 0;
+            updateBadge();
 
             socket.emit('joinRoute', currentRoute);
             document.getElementById('role-selection').style.display = 'none';
@@ -265,18 +299,71 @@
             if (role === 'commuter') {
                 document.getElementById('commuter-view').style.display = 'flex';
                 document.getElementById('commuter-route-display').innerText = `Viewing: ${routeName}`;
+                document.getElementById('navBell').style.display = 'block'; // Show bell
                 initMap();
             } else if (role === 'driver') {
                 document.getElementById('driver-view').style.display = 'flex';
                 document.getElementById('driver-route-display').innerText = `${routeName} Console`;
+                document.getElementById('navBell').style.display = 'none'; // Hide bell for driver
             }
         }
 
         function goBack() {
             document.getElementById('commuter-view').style.display = 'none';
             document.getElementById('driver-view').style.display = 'none';
+            document.getElementById('navBell').style.display = 'none';
             document.getElementById('role-selection').style.display = 'flex';
+            if (isDrawerOpen) toggleDrawer();
             if (isTracking) toggleTracking();
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('notification-drawer');
+            isDrawerOpen = !isDrawerOpen;
+            if(isDrawerOpen) {
+                drawer.style.right = '0';
+                unreadCount = 0; // Clear badge on open
+                updateBadge();
+            } else {
+                drawer.style.right = '-100%';
+            }
+        }
+
+        function updateBadge() {
+            const badge = document.getElementById('unreadBadge');
+            if(unreadCount > 0) {
+                badge.innerText = unreadCount;
+                badge.style.display = 'block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function appendToLog(msg) {
+            const logContainer = document.getElementById('notificationLog');
+            const time = getCurrentTime();
+            
+            if (!hasLoggedFirstItem) {
+                logContainer.innerHTML = '';
+                hasLoggedFirstItem = true;
+            }
+
+            // Determine border color based on keywords
+            let extraClass = '';
+            if (msg.toLowerCase().includes('delay') || msg.toLowerCase().includes('traffic')) extraClass = 'delayed';
+            if (msg.toLowerCase().includes('arrived') || msg.toLowerCase().includes('available')) extraClass = 'arrived';
+
+            const newItem = document.createElement('div');
+            newItem.className = `log-item ${extraClass}`;
+            newItem.innerHTML = `${msg} <span class="log-time">${time}</span>`;
+            
+            // Insert at the top of the list
+            logContainer.prepend(newItem);
+
+            if(!isDrawerOpen) {
+                unreadCount++;
+                updateBadge();
+            }
         }
 
         function checkInTerminal() {
@@ -291,21 +378,22 @@
             if (display) display.innerText = count;
         });
 
-        // System Announcement Listener (Applies timestamps)
         socket.on('newAnnouncement', (msg) => {
             const banner = document.getElementById('announcement-banner');
             banner.innerHTML = `${msg} <br><span class="timestamp">Broadcasted at ${getCurrentTime()}</span>`;
             banner.style.display = 'block';
             setTimeout(() => { banner.style.display = 'none'; }, 25000); 
+            
+            appendToLog(msg);
         });
 
         function initMap() {
             if (!map) {
                 const center = demoStartLocations[currentRoute];
-                map = L.map('map').setView([center.lat, center.lng], 13);
+                map = L.map('map', { zoomControl: false }).setView([center.lat, center.lng], 13);
+                L.control.zoom({ position: 'bottomleft' }).addTo(map);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
 
-                // Receive Location & ETA payload from Driver
                 socket.on('updateMap', (data) => {
                     const latLng = [data.lat, data.lng];
                     const target = terminalDestinations[currentRoute];
@@ -322,7 +410,6 @@
                     }
                     map.panTo(latLng, {animate: true, duration: 1});
 
-                    // Update UI Timestamps and ETA
                     document.getElementById('map-last-updated').innerText = `Last GPS Update: ${getCurrentTime()}`;
                     
                     const etaEl = document.getElementById('eta-display');
@@ -343,13 +430,15 @@
                         }
                     }
 
-                    // Commuter-Side Configurable Proximity Alert
                     const userThreshold = parseFloat(document.getElementById('studentProximityThreshold').value);
                     if (data.distance <= userThreshold && !hasTriggeredLocalProximity && data.distance > 0.2) {
+                        const localMsg = `📍 Shuttle is within your ${userThreshold}km threshold!`;
                         const banner = document.getElementById('announcement-banner');
-                        banner.innerHTML = `📍 Shuttle is within your ${userThreshold}km threshold! <br><span class="timestamp">Local Alert at ${getCurrentTime()}</span>`;
+                        banner.innerHTML = `${localMsg} <br><span class="timestamp">Local Alert at ${getCurrentTime()}</span>`;
                         banner.style.display = 'block';
                         hasTriggeredLocalProximity = true;
+                        
+                        appendToLog(localMsg);
                         setTimeout(() => { banner.style.display = 'none'; }, 20000);
                     }
                 });
@@ -362,7 +451,6 @@
             const status = document.getElementById('status');
             const metrics = document.getElementById('distance-metrics');
             
-            // Read configurable parameters
             const intervalSecs = parseInt(document.getElementById('broadcastInterval').value) || 2;
             const broadcastDelayMs = intervalSecs * 1000;
             const targetArrivalThreshold = parseFloat(document.getElementById('arrivalThreshold').value) || 0.2;
@@ -392,7 +480,7 @@
                         simulatedLat += stepLat;
                         simulatedLng += stepLng;
                         if (Math.random() < 0.06 && !hasTriggeredTraffic) {
-                            trafficTicks = 8; // Longer simulated traffic
+                            trafficTicks = 8; 
                             hasTriggeredTraffic = true;
                             isDelayed = true;
                             socket.emit('sendAnnouncement', { route: currentRoute, msg: "⚠️ Speed dropped. Traffic congestion detected." });
@@ -402,11 +490,9 @@
                     
                     const distanceToTerminal = calculateDistance(simulatedLat, simulatedLng, targetLoc.lat, targetLoc.lng);
                     
-                    // Simple ETA formula: Assume avg speed 30km/h (2 mins per km). Add +15 mins if delayed.
                     let estimatedMins = Math.ceil(distanceToTerminal * 2);
                     if (isDelayed) estimatedMins += 15;
 
-                    // Emit payload to commuter clients
                     socket.emit('driverLocation', { 
                         route: currentRoute, 
                         lat: simulatedLat, 
@@ -419,7 +505,6 @@
                     status.innerText = `[Broadcasting every ${intervalSecs}s]`;
                     metrics.innerText = `Distance: ${distanceToTerminal.toFixed(2)} km | Last ping: ${getCurrentTime()}`;
 
-                    // Configurable Driver Arrival Threshold
                     if (distanceToTerminal <= targetArrivalThreshold && !hasTriggeredArrival) {
                         socket.emit('sendAnnouncement', { route: currentRoute, msg: "✅ Automated Alert: Shuttle has arrived at the terminal." });
                         socket.emit('driverArrived', currentRoute); 
